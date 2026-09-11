@@ -8,7 +8,7 @@ The user can add tasks and delete tasks from the list.
 
 ## Features
 
-- Add a task
+- Add a tasks
 - Display tasks
 - Delete tasks
 - Simple and easy-to-use design
