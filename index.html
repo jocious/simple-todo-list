@@ -1,76 +1,31 @@
+<form id="task-form">
+    <input
+        type="text"
+        id="task-input"
+        placeholder="What do you need to do?"
+        maxlength="150"
+        aria-label="New task"
+        required
+    >
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <button type="submit" class="add-button">Add Task</button>
+</form>
 
-    <title>My To-Do List</title>
+<div class="search-container">
+    <input
+        type="search"
+        id="search-input"
+        placeholder="Search your tasks..."
+        aria-label="Search tasks"
+    >
+</div>
 
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
-</head>
-<body>
+<div class="filter-container" aria-label="Filter tasks">
+    <button type="button" class="filter-button active" data-filter="all">All</button>
+    <button type="button" class="filter-button" data-filter="active">Active</button>
+    <button type="button" class="filter-button" data-filter="completed">Completed</button>
+</div>
 
-    <main class="todo-container">
-
-        <header class="page-header">
-            <p class="eyebrow">PERSONAL PRODUCTIVITY</p>
-            <h1>My To-Do List</h1>
-            <p class="subtitle">Organize your day, one task at a time.</p>
-        </header>
-
-        <!-- Form for adding new tasks. -->
-        <form id="task-form">
-            <input
-                type="text"
-                id="task-input"
-                placeholder="What do you need to do?"
-                maxlength="150"
-                aria-label="New task"
-                required
-            >
-
-            <button type="submit" class="add-button">
-                Add Task
-            </button>
-        </form>
-
-        <!-- Search field for finding tasks by name. -->
-        <div class="search-container">
-            <input
-                type="search"
-                id="search-input"
-                placeholder="Search your tasks..."
-                aria-label="Search tasks"
-            >
-        </div>
-
-        <!-- Buttons for filtering tasks. -->
-        <div class="filter-container" aria-label="Filter tasks">
-            <button type="button" class="filter-button active" data-filter="all">
-                All
-            </button>
-
-            <button type="button" class="filter-button" data-filter="active">
-                Active
-            </button>
-
-            <button type="button" class="filter-button" data-filter="completed">
-                Completed
-            </button>
-        </div>
-
-        <!-- Displays the number of unfinished tasks. -->
-        <p id="task-summary">0 tasks remaining</p>
-
-        <!-- JavaScript inserts matching tasks here. -->
-        <ul id="task-list"></ul>
-
-        <!-- Message changes depending on the search and filter results. -->
-        <p id="empty-message">No tasks yet. Add your first task!</p>
-
-    </main>
-
-</body>
-</html>
+<p id="task-summary">0 tasks remaining</p>
+<ul id="task-list"></ul>
+<p id="empty-message">No tasks yet. Add your first task!</p>

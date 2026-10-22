@@ -1,58 +1,86 @@
 
-/* Search field section. */
-.search-container {
-    margin-top: 20px;
-}
-
-#search-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid lightgray;
-    border-radius: 6px;
-    font-size: 15px;
-}
-
-/* Highlight the search field when it is selected. */
-#search-input:focus {
-    outline: 2px solid lightskyblue;
-    border-color: steelblue;
-}
-
-/* Place filter buttons beside one another. */
-.filter-container {
+/* Keep the task name and action buttons aligned. */
+.task-item {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 10px;
-    margin-top: 15px;
+    flex-wrap: wrap;
 }
 
-/* Default appearance of filter buttons. */
-.filter-button {
+/* Allow the task text to use the available space. */
+.task-text {
+    flex: 1;
+    min-width: 100px;
+    overflow-wrap: anywhere;
+}
+
+/* Group Edit and Delete buttons together. */
+.task-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+/* Edit button appearance. */
+.edit-button {
     background-color: aliceblue;
+    color: darkblue;
+    border: 1px solid lightsteelblue;
+}
+
+.edit-button:hover {
+    background-color: lightblue;
+}
+
+/* Delete button appearance. */
+.delete-button {
+    background-color: mistyrose;
+    color: darkred;
+}
+
+.delete-button:hover {
+    background-color: lightpink;
+}
+
+/* Editing input field. */
+.edit-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    border: 1px solid steelblue;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Editing input focus state. */
+.edit-input:focus {
+    outline: 2px solid lightskyblue;
+}
+
+/* Save button. */
+.save-button {
+    background-color: forestgreen;
+    color: white;
+}
+
+.save-button:hover {
+    background-color: darkgreen;
+}
+
+/* Cancel button. */
+.cancel-button {
+    background-color: gainsboro;
     color: darkslategray;
-    border: 1px solid lightgray;
 }
 
-/* Highlight the currently selected filter. */
-.filter-button.active {
-    background-color: royalblue;
-    color: white;
-    border-color: royalblue;
+.cancel-button:hover {
+    background-color: lightgray;
 }
 
-/* Change the button appearance when the pointer hovers over it. */
-.filter-button:hover {
-    border-color: royalblue;
-}
-
-/* Keep the active button's text readable. */
-.filter-button.active:hover {
-    background-color: mediumblue;
-    color: white;
-}
-
-/* Show a clear focus indicator for keyboard users. */
-.filter-button:focus-visible {
-    outline: 2px solid steelblue;
-    outline-offset: 2px;
+/* Keep action buttons usable on narrow screens. */
+@media (max-width: 480px) {
+    .task-actions {
+        width: 100%;
+        margin-left: 30px;
+    }
 }
