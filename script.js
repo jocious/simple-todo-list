@@ -1,6 +1,6 @@
 
 // =====================================================
-// 1. GET THE HTML ELEMENTS
+// 1. GET HTML ELEMENTS
 // =====================================================
 
 const taskForm = document.getElementById("task-form");
@@ -12,11 +12,29 @@ const emptyMessage = document.getElementById("empty-message");
 const searchInput = document.getElementById("search-input");
 const filterButtons = document.querySelectorAll(".filter-button");
 
+// Dashboard statistic elements.
+const totalCount = document.getElementById("total-count");
+const activeCount = document.getElementById("active-count");
+const completedCount = document.getElementById("completed-count");
+
+// Progress bar elements.
+const progressPercentage =
+    document.getElementById("progress-percentage");
+
+const progressFill = document.getElementById("progress-fill");
+const progressTrack = document.getElementById("progress-track");
+const progressMessage = document.getElementById("progress-message");
+
+// Button for removing all completed tasks.
+const clearCompletedButton =
+    document.getElementById("clear-completed-button");
+
 
 // =====================================================
-// 2. LOAD SAVED TASKS
+// 2. LOAD TASKS FROM LOCAL STORAGE
 // =====================================================
 
+// Try to load the tasks previously saved in the browser.
 let tasks = [];
 
 try {
@@ -25,7 +43,7 @@ try {
     if (savedTasks !== null) {
         const parsedTasks = JSON.parse(savedTasks);
 
-        // Check that saved tasks have the required properties.
+        // Confirm that every saved item has the correct structure.
         if (
             Array.isArray(parsedTasks) &&
             parsedTasks.every(function (task) {
@@ -45,21 +63,15 @@ try {
     console.error("Could not load saved tasks:", error);
 }
 
-
-// =====================================================
-// 3. SET THE CURRENT FILTER AND EDITING TASK
-// =====================================================
-
-// Show all tasks by default.
+// Show all tasks when the page first opens.
 let currentFilter = "all";
 
 // Store the ID of the task currently being edited.
-// null means no task is currently being edited.
 let editingTaskId = null;
 
 
 // =====================================================
-// 4. SAVE TASKS TO LOCAL STORAGE
+// 3. SAVE TASKS
 // =====================================================
 
 function saveTasks() {
@@ -73,35 +85,103 @@ function saveTasks() {
 
 
 // =====================================================
+// 4. UPDATE THE DASHBOARD STATISTICS
+// =====================================================
+
+function updateDashboard() {
+
+    // Total number of tasks, including completed tasks.
+    const total = tasks.length;
+
+    // Count unfinished tasks.
+    const active = tasks.filter(function (task) {
+        return !task.completed;
+    }).length;
+
+    // Count finished tasks.
+    const completed = tasks.filter(function (task) {
+        return task.completed;
+    }).length;
+
+    // Update the three statistic cards.
+    totalCount.textContent = total;
+    activeCount.textContent = active;
+    completedCount.textContent = completed;
+
+    // Calculate the completion percentage.
+    // Avoid dividing by zero when the list is empty.
+    const percentage = total === 0
+        ? 0
+        : Math.round((completed / total) * 100);
+
+    // Update the visible percentage.
+    progressPercentage.textContent = percentage + "%";
+
+    // Update the progress bar width.
+    progressFill.style.width = percentage + "%";
+
+    // Update progress bar accessibility information.
+    progressTrack.setAttribute("aria-valuenow", percentage);
+
+    // Display a message appropriate to the current progress.
+    if (total === 0) {
+        progressMessage.textContent =
+            "Let's complete your first task!";
+    } else if (percentage === 100) {
+        progressMessage.textContent =
+            "Amazing! All tasks are completed!";
+    } else if (percentage >= 50) {
+        progressMessage.textContent =
+            "Great progress! Keep going!";
+    } else {
+        progressMessage.textContent =
+            "Every completed task moves you forward.";
+    }
+
+    // Enable cleanup only when completed tasks exist.
+    clearCompletedButton.disabled = completed === 0;
+}
+
+
+// =====================================================
 // 5. ADD A NEW TASK
 // =====================================================
 
 taskForm.addEventListener("submit", function (event) {
+
+    // Prevent the form from reloading the webpage.
     event.preventDefault();
 
+    // Read the input and remove unnecessary spaces.
     const taskName = taskInput.value.trim();
 
+    // Do not create an empty task.
     if (taskName === "") {
         return;
     }
 
+    // Create the task object.
     const newTask = {
         id: Date.now(),
         name: taskName,
         completed: false
     };
 
+    // Add the task to the array.
     tasks.push(newTask);
 
+    // Save the updated list.
     saveTasks();
 
-    // Clear search and show all tasks after adding a task.
+    // Clear the search and show the new task.
     searchInput.value = "";
     currentFilter = "all";
-    updateActiveFilterButton();
+    editingTaskId = null;
 
+    updateActiveFilterButton();
     renderTasks();
 
+    // Clear the input for the next task.
     taskInput.value = "";
     taskInput.focus();
 });
@@ -111,6 +191,7 @@ taskForm.addEventListener("submit", function (event) {
 // 6. SEARCH TASKS
 // =====================================================
 
+// Refresh the list whenever the search text changes.
 searchInput.addEventListener("input", function () {
     renderTasks();
 });
@@ -120,9 +201,16 @@ searchInput.addEventListener("input", function () {
 // 7. FILTER TASKS
 // =====================================================
 
+// Listen for clicks on All, Active, and Completed.
 filterButtons.forEach(function (button) {
+
     button.addEventListener("click", function () {
+
+        // Remember which filter was selected.
         currentFilter = button.dataset.filter;
+
+        // Exit editing mode when changing filters.
+        editingTaskId = null;
 
         updateActiveFilterButton();
         renderTasks();
@@ -131,82 +219,139 @@ filterButtons.forEach(function (button) {
 
 
 // =====================================================
-// 8. UPDATE THE SELECTED FILTER BUTTON
+// 8. UPDATE THE SELECTED FILTER
 // =====================================================
 
 function updateActiveFilterButton() {
-    filterButtons.forEach(function (button) {
-        const isActive = button.dataset.filter === currentFilter;
 
+    filterButtons.forEach(function (button) {
+
+        const isActive =
+            button.dataset.filter === currentFilter;
+
+        // Add the CSS class to the selected button.
         button.classList.toggle("active", isActive);
+
+        // Tell assistive technology which button is selected.
         button.setAttribute("aria-pressed", String(isActive));
     });
 }
 
 
 // =====================================================
-// 9. EDIT A TASK
+// 9. EDIT AND SAVE A TASK
 // =====================================================
 
-// Save the edited task name.
 function saveEditedTask(task, editInput) {
+
+    // Read the updated task name.
     const updatedName = editInput.value.trim();
 
-    // Do not save empty task names.
+    // Reject empty task names.
     if (updatedName === "") {
         alert("Task name cannot be empty.");
         editInput.focus();
         return;
     }
 
-    // Do not allow task names longer than the input limit.
+    // Enforce the same 150-character limit as the add form.
     if (updatedName.length > 150) {
         alert("Task name cannot exceed 150 characters.");
         editInput.focus();
         return;
     }
 
-    // Update the existing task rather than creating a new one.
+    // Change the existing task instead of creating a new one.
     task.name = updatedName;
 
-    // Save the edited name to local storage.
+    // Save the edited task.
     saveTasks();
 
-    // Leave editing mode.
+    // Exit editing mode.
     editingTaskId = null;
 
-    // Refresh the list to show the updated task.
+    // Refresh the list and dashboard.
     renderTasks();
 }
 
 
 // =====================================================
-// 10. DISPLAY TASKS
+// 10. CLEAR COMPLETED TASKS
+// =====================================================
+
+clearCompletedButton.addEventListener("click", function () {
+
+    // Find out how many completed tasks will be removed.
+    const completedTotal = tasks.filter(function (task) {
+        return task.completed;
+    }).length;
+
+    // Do nothing if there are no completed tasks.
+    if (completedTotal === 0) {
+        return;
+    }
+
+    // Ask for confirmation before permanently removing tasks.
+    const confirmed = confirm(
+        "Delete all " + completedTotal +
+        " completed task(s)? This action cannot be undone."
+    );
+
+    // Keep all unfinished tasks if the user confirms.
+    if (confirmed) {
+
+        tasks = tasks.filter(function (task) {
+            return !task.completed;
+        });
+
+        // Exit editing mode if necessary.
+        editingTaskId = null;
+
+        // Save the updated list.
+        saveTasks();
+
+        // Refresh the dashboard and task list.
+        renderTasks();
+    }
+});
+
+
+// =====================================================
+// 11. DISPLAY TASKS
 // =====================================================
 
 function renderTasks() {
+
+    // Clear the existing HTML task items.
     taskList.innerHTML = "";
 
-    // Count unfinished tasks across the entire task list.
+    // Update the dashboard every time the list changes.
+    updateDashboard();
+
+    // Count unfinished tasks in the entire list.
     const remainingTasks = tasks.filter(function (task) {
         return !task.completed;
     }).length;
 
+    // Update the remaining-task message.
     taskSummary.textContent =
         remainingTasks +
         (remainingTasks === 1
             ? " task remaining"
             : " tasks remaining");
 
-    // Read the search text without considering letter case.
+    // Prepare the search text.
     const searchText = searchInput.value.trim().toLowerCase();
 
-    // Apply both search and status filtering.
+    // Select tasks matching both search and filter.
     const visibleTasks = tasks.filter(function (task) {
+
+        // Search without considering uppercase or lowercase letters.
         const matchesSearch = task.name
             .toLowerCase()
             .includes(searchText);
 
+        // Determine whether the task matches the status filter.
         const matchesFilter =
             currentFilter === "all" ||
             (currentFilter === "active" && !task.completed) ||
@@ -215,8 +360,9 @@ function renderTasks() {
         return matchesSearch && matchesFilter;
     });
 
-    // Display an appropriate empty-state message.
+    // Display the correct empty-state message.
     if (visibleTasks.length === 0) {
+
         emptyMessage.textContent = tasks.length === 0
             ? "No tasks yet. Add your first task!"
             : "No tasks match your search or filter.";
@@ -226,24 +372,28 @@ function renderTasks() {
         emptyMessage.hidden = true;
     }
 
-    // Build the visible task items.
+    // Create an HTML item for every visible task.
     visibleTasks.forEach(function (task) {
+
         const listItem = document.createElement("li");
         listItem.className = "task-item";
 
+        // Apply the completed appearance when needed.
         if (task.completed) {
             listItem.classList.add("completed");
         }
 
-        // Create the task completion checkbox.
+        // Create the checkbox.
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = task.completed;
+
         checkbox.setAttribute(
             "aria-label",
             "Mark " + task.name + " as completed"
         );
 
+        // Update completion and save the change.
         checkbox.addEventListener("change", function () {
             task.completed = checkbox.checked;
             saveTasks();
@@ -252,8 +402,9 @@ function renderTasks() {
 
         listItem.appendChild(checkbox);
 
-        // If this task is being edited, show an editing form.
+        // Show the editing controls for the selected task.
         if (editingTaskId === task.id) {
+
             const editInput = document.createElement("input");
             editInput.type = "text";
             editInput.className = "edit-input";
@@ -261,9 +412,8 @@ function renderTasks() {
             editInput.maxLength = 150;
             editInput.setAttribute("aria-label", "Edit task name");
 
-            // Group the Save and Cancel buttons.
-            const editActions = document.createElement("div");
-            editActions.className = "task-actions";
+            const taskActions = document.createElement("div");
+            taskActions.className = "task-actions";
 
             const saveButton = document.createElement("button");
             saveButton.type = "button";
@@ -275,53 +425,52 @@ function renderTasks() {
             cancelButton.className = "cancel-button";
             cancelButton.textContent = "Cancel";
 
-            // Save when the Save button is clicked.
+            // Save with the Save button.
             saveButton.addEventListener("click", function () {
                 saveEditedTask(task, editInput);
             });
 
-            // Save when Enter is pressed.
+            // Enter saves; Escape cancels.
             editInput.addEventListener("keydown", function (event) {
+
                 if (event.key === "Enter") {
                     event.preventDefault();
                     saveEditedTask(task, editInput);
                 }
 
-                // Cancel editing when Escape is pressed.
                 if (event.key === "Escape") {
                     editingTaskId = null;
                     renderTasks();
                 }
             });
 
-            // Cancel without changing the original task name.
+            // Cancel editing without changing the original name.
             cancelButton.addEventListener("click", function () {
                 editingTaskId = null;
                 renderTasks();
             });
 
-            editActions.appendChild(saveButton);
-            editActions.appendChild(cancelButton);
+            taskActions.appendChild(saveButton);
+            taskActions.appendChild(cancelButton);
 
             listItem.appendChild(editInput);
-            listItem.appendChild(editActions);
-
+            listItem.appendChild(taskActions);
             taskList.appendChild(listItem);
 
-            // Focus the input so the user can start typing immediately.
             editInput.focus();
 
+            // Avoid adding the normal Edit/Delete buttons too.
             return;
         }
 
-        // Display the normal task name when not editing.
+        // Display the task name.
         const taskText = document.createElement("span");
         taskText.className = "task-text";
         taskText.textContent = task.name;
 
         listItem.appendChild(taskText);
 
-        // Group Edit and Delete buttons.
+        // Group the Edit and Delete buttons.
         const taskActions = document.createElement("div");
         taskActions.className = "task-actions";
 
@@ -343,11 +492,13 @@ function renderTasks() {
         deleteButton.textContent = "Delete";
 
         deleteButton.addEventListener("click", function () {
+
+            // Remove only the selected task.
             tasks = tasks.filter(function (item) {
                 return item.id !== task.id;
             });
 
-            // Exit editing mode if the deleted task was being edited.
+            // Exit editing mode if this task was being edited.
             if (editingTaskId === task.id) {
                 editingTaskId = null;
             }
@@ -356,6 +507,7 @@ function renderTasks() {
             renderTasks();
         });
 
+        // Place both buttons in the action group.
         taskActions.appendChild(editButton);
         taskActions.appendChild(deleteButton);
 
@@ -366,8 +518,11 @@ function renderTasks() {
 
 
 // =====================================================
-// 11. INITIALIZE THE PAGE
+// 12. INITIALIZE THE APPLICATION
 // =====================================================
 
+// Select All as the initial filter.
 updateActiveFilterButton();
+
+// Load saved tasks, statistics, and progress on page load.
 renderTasks();

@@ -1,31 +1,163 @@
-<form id="task-form">
-    <input
-        type="text"
-        id="task-input"
-        placeholder="What do you need to do?"
-        maxlength="150"
-        aria-label="New task"
-        required
-    >
 
-    <button type="submit" class="add-button">Add Task</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<div class="search-container">
-    <input
-        type="search"
-        id="search-input"
-        placeholder="Search your tasks..."
-        aria-label="Search tasks"
-    >
-</div>
+    <title>My To-Do Dashboard</title>
 
-<div class="filter-container" aria-label="Filter tasks">
-    <button type="button" class="filter-button active" data-filter="all">All</button>
-    <button type="button" class="filter-button" data-filter="active">Active</button>
-    <button type="button" class="filter-button" data-filter="completed">Completed</button>
-</div>
+    <!-- Load the page design and JavaScript functionality. -->
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
 
-<p id="task-summary">0 tasks remaining</p>
-<ul id="task-list"></ul>
-<p id="empty-message">No tasks yet. Add your first task!</p>
+    <main class="todo-container">
+
+        <!-- Page heading -->
+        <header class="page-header">
+            <p class="eyebrow">PERSONAL PRODUCTIVITY</p>
+            <h1>My To-Do Dashboard</h1>
+            <p class="subtitle">
+                Plan your work, track your progress, and get things done.
+            </p>
+        </header>
+
+        <!-- Dashboard statistics -->
+        <section class="dashboard" aria-label="Task statistics">
+
+            <article class="stat-card">
+                <p>Total Tasks</p>
+                <h2 id="total-count">0</h2>
+            </article>
+
+            <article class="stat-card">
+                <p>Active Tasks</p>
+                <h2 id="active-count">0</h2>
+            </article>
+
+            <article class="stat-card">
+                <p>Completed</p>
+                <h2 id="completed-count">0</h2>
+            </article>
+
+        </section>
+
+        <!-- Overall task completion progress -->
+        <section class="progress-section" aria-label="Overall progress">
+            <div class="progress-heading">
+                <span>Overall Progress</span>
+                <span id="progress-percentage">0%</span>
+            </div>
+
+            <div
+                class="progress-track"
+                id="progress-track"
+                role="progressbar"
+                aria-label="Task completion progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="0"
+            >
+                <div id="progress-fill"></div>
+            </div>
+
+            <p id="progress-message">Let's complete your first task!</p>
+        </section>
+
+        <!-- Add a task -->
+        <section class="task-entry">
+            <h2>Add a New Task</h2>
+
+            <form id="task-form">
+                <input
+                    type="text"
+                    id="task-input"
+                    placeholder="What do you need to do?"
+                    maxlength="150"
+                    aria-label="New task"
+                    required
+                >
+
+                <button type="submit" class="add-button">
+                    Add Task
+                </button>
+            </form>
+        </section>
+
+        <!-- Search and filter controls -->
+        <section class="task-management">
+            <div class="search-container">
+                <label for="search-input">Search tasks</label>
+
+                <input
+                    type="search"
+                    id="search-input"
+                    placeholder="Search by task name..."
+                >
+            </div>
+
+            <div class="filter-section">
+                <span class="control-label">Filter by status</span>
+
+                <div class="filter-container" aria-label="Filter tasks">
+                    <button
+                        type="button"
+                        class="filter-button active"
+                        data-filter="all"
+                        aria-pressed="true"
+                    >All</button>
+
+                    <button
+                        type="button"
+                        class="filter-button"
+                        data-filter="active"
+                        aria-pressed="false"
+                    >Active</button>
+
+                    <button
+                        type="button"
+                        class="filter-button"
+                        data-filter="completed"
+                        aria-pressed="false"
+                    >Completed</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Task list heading and cleanup action -->
+        <section class="task-list-section">
+            <div class="list-heading">
+                <div>
+                    <h2>My Tasks</h2>
+                    <p id="task-summary">0 tasks remaining</p>
+                </div>
+
+                <button
+                    type="button"
+                    id="clear-completed-button"
+                    class="clear-button"
+                    disabled
+                >
+                    Clear Completed
+                </button>
+            </div>
+
+            <!-- JavaScript creates task items here. -->
+            <ul id="task-list"></ul>
+
+            <p id="empty-message">
+                No tasks yet. Add your first task!
+            </p>
+        </section>
+
+        <!-- Page footer -->
+        <footer>
+            <p>Small steps every day lead to big achievements.</p>
+        </footer>
+
+    </main>
+
+</body>
+</html>
