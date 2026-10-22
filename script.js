@@ -3,29 +3,22 @@
 // 1. GET THE HTML ELEMENTS
 // =====================================================
 
-// Get the form used to add new tasks.
 const taskForm = document.getElementById("task-form");
-
-// Get the text input where the user types a task.
 const taskInput = document.getElementById("task-input");
-
-// Get the list where tasks will be displayed.
 const taskList = document.getElementById("task-list");
-
-// Get the element that displays the remaining task count.
 const taskSummary = document.getElementById("task-summary");
-
-// Get the message shown when the list is empty.
 const emptyMessage = document.getElementById("empty-message");
 
+// Get the new search input and filter buttons.
+const searchInput = document.getElementById("search-input");
+const filterButtons = document.querySelectorAll(".filter-button");
+
 
 // =====================================================
-// 2. LOAD SAVED TASKS FROM LOCAL STORAGE
+// 2. SET UP TASKS AND FILTER SETTINGS
 // =====================================================
 
-// localStorage saves information in the browser.
-// JSON.parse converts the saved JSON text back into JavaScript data.
-// If no saved tasks exist, use an empty array instead.
+// Load previously saved tasks from the browser.
 let tasks = [];
 
 try {
@@ -34,7 +27,7 @@ try {
     if (savedTasks !== null) {
         const parsedTasks = JSON.parse(savedTasks);
 
-        // Only accept an array containing valid task objects.
+        // Check that saved data has the expected task structure.
         if (
             Array.isArray(parsedTasks) &&
             parsedTasks.every(function (task) {
@@ -51,22 +44,21 @@ try {
         }
     }
 } catch (error) {
-    // If saved data cannot be read, start with an empty list.
     console.error("Could not load saved tasks:", error);
 }
+
+// "all" means display both active and completed tasks.
+let currentFilter = "all";
 
 
 // =====================================================
 // 3. SAVE TASKS TO LOCAL STORAGE
 // =====================================================
 
-// Convert the tasks array into JSON text and save it.
-// This function is called whenever a task changes.
 function saveTasks() {
     try {
         localStorage.setItem("todoTasks", JSON.stringify(tasks));
     } catch (error) {
-        // Inform the developer if the browser cannot save the data.
         console.error("Could not save tasks:", error);
         alert("Your tasks could not be saved in this browser.");
     }
@@ -77,34 +69,40 @@ function saveTasks() {
 // 4. ADD A NEW TASK
 // =====================================================
 
-// Listen for the user submitting the task form.
 taskForm.addEventListener("submit", function (event) {
 
-    // Stop the browser from refreshing the page.
+    // Prevent the page from refreshing when the form is submitted.
     event.preventDefault();
 
-    // Get the task name and remove extra spaces.
+    // Get the task name and remove unnecessary spaces.
     const taskName = taskInput.value.trim();
 
-    // Do not add a task if the input is empty.
+    // Do not add an empty task.
     if (taskName === "") {
         return;
     }
 
-    // Create a new task with a unique ID and completion status.
+    // Create a new task object.
     const newTask = {
         id: Date.now(),
         name: taskName,
         completed: false
     };
 
-    // Add the new task to the array.
+    // Store the task in the array.
     tasks.push(newTask);
 
-    // Save the updated array in the browser.
+    // Save the updated tasks.
     saveTasks();
 
-    // Refresh the task list displayed on the webpage.
+    // Clear the search so the new task is visible.
+    searchInput.value = "";
+
+    // Switch to All so a new task is not hidden by a filter.
+    currentFilter = "all";
+    updateActiveFilterButton();
+
+    // Display the updated task list.
     renderTasks();
 
     // Clear the input for the next task.
@@ -114,42 +112,127 @@ taskForm.addEventListener("submit", function (event) {
 
 
 // =====================================================
-// 5. DISPLAY THE TASKS
+// 5. SEARCH TASKS
+// =====================================================
+
+// Update the displayed list whenever the search text changes.
+searchInput.addEventListener("input", function () {
+    renderTasks();
+});
+
+
+// =====================================================
+// 6. FILTER TASKS
+// =====================================================
+
+// Attach a click event to each filter button.
+filterButtons.forEach(function (button) {
+
+    button.addEventListener("click", function () {
+
+        // Read the filter name from the clicked button.
+        currentFilter = button.dataset.filter;
+
+        // Highlight the selected filter button.
+        updateActiveFilterButton();
+
+        // Display tasks matching the selected filter.
+        renderTasks();
+    });
+});
+
+
+// =====================================================
+// 7. UPDATE THE ACTIVE FILTER BUTTON
+// =====================================================
+
+function updateActiveFilterButton() {
+
+    filterButtons.forEach(function (button) {
+
+        // Compare the button's filter with the current filter.
+        const isActive = button.dataset.filter === currentFilter;
+
+        // Apply the active CSS class to the selected button.
+        button.classList.toggle("active", isActive);
+
+        // Tell assistive technology which filter is selected.
+        button.setAttribute("aria-pressed", String(isActive));
+    });
+}
+
+
+// =====================================================
+// 8. DISPLAY TASKS USING SEARCH AND FILTERS
 // =====================================================
 
 function renderTasks() {
 
-    // Remove the old displayed list before rebuilding it.
+    // Remove the previous task display.
     taskList.innerHTML = "";
 
-    // Count tasks that are not completed.
+    // Count all unfinished tasks, not just visible tasks.
     const remainingTasks = tasks.filter(function (task) {
         return !task.completed;
     }).length;
 
-    // Display the correct remaining-task count.
+    // Update the remaining-task counter.
     taskSummary.textContent =
         remainingTasks +
         (remainingTasks === 1
             ? " task remaining"
             : " tasks remaining");
 
-    // Hide the empty message when tasks exist.
-    emptyMessage.hidden = tasks.length > 0;
+    // Get the current search text and ignore letter case.
+    const searchText = searchInput.value.trim().toLowerCase();
 
-    // Loop through every task and create its HTML elements.
-    tasks.forEach(function (task) {
+    // Select tasks that match both the search and the filter.
+    const visibleTasks = tasks.filter(function (task) {
 
-        // Create the container for one task.
+        // Check whether the task name contains the search text.
+        const matchesSearch = task.name
+            .toLowerCase()
+            .includes(searchText);
+
+        // Determine whether the task matches the chosen filter.
+        const matchesFilter =
+            currentFilter === "all" ||
+            (currentFilter === "active" && !task.completed) ||
+            (currentFilter === "completed" && task.completed);
+
+        // Display the task only if both conditions are satisfied.
+        return matchesSearch && matchesFilter;
+    });
+
+    // Show an appropriate message if no tasks match.
+    if (visibleTasks.length === 0) {
+
+        if (tasks.length === 0) {
+            emptyMessage.textContent =
+                "No tasks yet. Add your first task!";
+        } else {
+            emptyMessage.textContent =
+                "No tasks match your search or filter.";
+        }
+
+        emptyMessage.hidden = false;
+
+    } else {
+        emptyMessage.hidden = true;
+    }
+
+    // Display each task that matches the search and filter.
+    visibleTasks.forEach(function (task) {
+
         const listItem = document.createElement("li");
         listItem.className = "task-item";
 
-        // Apply the completed style when appropriate.
+        // Mark completed tasks with the completed CSS class.
         if (task.completed) {
             listItem.classList.add("completed");
         }
 
-        // Create the checkbox for marking a task complete.
+        // Create the completion checkbox.
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = task.completed;
@@ -159,20 +242,14 @@ function renderTasks() {
             "Mark " + task.name + " as completed"
         );
 
-        // Update and save the task when the checkbox changes.
+        // Update and save the completion status.
         checkbox.addEventListener("change", function () {
-
-            // Store the new completion status.
             task.completed = checkbox.checked;
-
-            // Save the updated tasks.
             saveTasks();
-
-            // Refresh the display.
             renderTasks();
         });
 
-        // Create the text displaying the task name.
+        // Create the task name.
         const taskText = document.createElement("span");
         taskText.className = "task-text";
         taskText.textContent = task.name;
@@ -183,37 +260,34 @@ function renderTasks() {
         deleteButton.textContent = "Delete";
         deleteButton.type = "button";
 
-        // Remove the selected task when clicked.
+        // Delete the task from the array and save the change.
         deleteButton.addEventListener("click", function () {
 
-            // Keep all tasks except the one being deleted.
             tasks = tasks.filter(function (item) {
                 return item.id !== task.id;
             });
 
-            // Save the updated array after deletion.
             saveTasks();
-
-            // Display the remaining tasks.
             renderTasks();
         });
 
-        // Put the checkbox, text, and Delete button in the item.
+        // Assemble the task item.
         listItem.appendChild(checkbox);
         listItem.appendChild(taskText);
         listItem.appendChild(deleteButton);
 
-        // Add the item to the webpage.
+        // Add the task item to the webpage.
         taskList.appendChild(listItem);
     });
 }
 
 
 // =====================================================
-// 6. DISPLAY SAVED TASKS WHEN THE PAGE OPENS
+// 9. INITIALIZE THE PAGE
 // =====================================================
 
-// Load and display the current tasks immediately.
-// Because tasks were loaded from localStorage above,
-// previously saved tasks appear after a page refresh.
+// Mark All as the initially selected filter.
+updateActiveFilterButton();
+
+// Load saved tasks and display them.
 renderTasks();
