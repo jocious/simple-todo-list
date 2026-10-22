@@ -1,30 +1,51 @@
+
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Simple To-Do List</title>
+    <title>My To-Do List</title>
 
+    <!-- Connect the stylesheet to the webpage. -->
     <link rel="stylesheet" href="style.css">
 
+    <!-- Load JavaScript after the HTML has been read. -->
+    <script src="script.js" defer></script>
 </head>
-
 <body>
 
-    <div class="container">
+    <main class="todo-container">
+        <header class="page-header">
+            <p class="eyebrow">PERSONAL PRODUCTIVITY</p>
+            <h1>My To-Do List</h1>
+            <p class="subtitle">Organize your day, one task at a time.</p>
+        </header>
 
-        <h1>My To-Do List</h1>
+        <!-- Form for adding a new task. -->
+        <form id="task-form">
+            <input
+                type="text"
+                id="task-input"
+                placeholder="What do you need to do?"
+                maxlength="150"
+                aria-label="New task"
+                required
+            >
 
-        <input type="text" id="taskInput" placeholder="Enter a task">
+            <button type="submit" class="add-button">
+                Add Task
+            </button>
+        </form>
 
-        <button onclick="addTask()">Add Task</button>
+        <!-- Displays the number of unfinished tasks. -->
+        <p id="task-summary">0 tasks remaining</p>
 
-        <ul id="taskList"></ul>
+        <!-- JavaScript will insert task items into this list. -->
+        <ul id="task-list"></ul>
 
-    </div>
-
-    <script src="script.js"></script>
+        <p id="empty-message">No tasks yet. Add your first task!</p>
+    </main>
 
 </body>
-
 </html>
